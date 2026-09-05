@@ -12,22 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Daftar">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
-<script>
-/* ============================================================
-   DAFTAR ACCOUNTS
-   Paste your Firebase project keys below to switch accounts on.
-   Leave them empty and the app stays offline-only on this device.
-   console.firebase.google.com -> Project settings -> Your apps
-   ============================================================ */
-window.DAFTAR_CONFIG = {
-  apiKey:            "",
-  authDomain:        "",
-  projectId:         "",
-  storageBucket:     "",
-  messagingSenderId: "",
-  appId:             ""
-};
-</script>
+<script src="config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -70,6 +55,8 @@ body{
   overflow:hidden;
 }
 button,input,select,textarea{font:inherit;color:inherit}
+a:focus,button:focus,input:focus,select:focus,textarea:focus{outline:2px solid var(--focus);outline-offset:2px}
+:focus:not(:focus-visible){outline:none}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-thumb{background:#C6CCC2;border-radius:6px;border:2px solid var(--paper)}
@@ -191,7 +178,7 @@ td.num,th.num{text-align:end;font-variant-numeric:tabular-nums}
   background:var(--card);border-radius:var(--r);
 }
 html[dir=rtl] .scanbar input{padding:14px 42px 14px 14px}
-.scanbar .ic{position:absolute;inset-inline-start:14px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:16px}
+.scanbar .ic{position:absolute;left:14px;inset-inline-start:14px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:16px}
 .suggest{
   position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:30;
   background:var(--card);border:1px solid var(--rule);border-radius:var(--r);
@@ -271,7 +258,7 @@ html[dir=rtl] .scanbar input{padding:14px 42px 14px 14px}
 .stat .v2{font-size:12.5px;font-family:var(--mono);color:var(--text-2)}
 
 .toast{
-  position:fixed;bottom:22px;inset-inline-start:50%;transform:translateX(-50%);
+  position:fixed;bottom:22px;left:50%;inset-inline-start:50%;transform:translateX(-50%);
   background:var(--ink);color:#fff;padding:11px 18px;border-radius:var(--r);z-index:300;
   font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);
 }
@@ -388,6 +375,9 @@ window.dispatchEvent(new Event("fb-ready"));
     <div class="body" id="view">
       <div style="max-width:460px;margin:40px auto;text-align:center;color:#5A6672">
         <div style="font-size:17px;font-weight:600;color:#14212E;margin-bottom:8px">Daftar is loading</div>
+        <p id="oldbrowser" style="display:none;color:#A32323;font-weight:600">
+          This device is too old to run Daftar. It needs iOS 13.4 or newer,
+          or an up to date Chrome on Android.<br><span dir="rtl">هذا الجهاز قديم جداً لتشغيل دفتر.</span></p>
         <p>If this message stays on screen, the file was opened in a preview window
         instead of a web browser.</p>
         <p style="margin-top:10px">Open it with <b>Chrome</b> or <b>Edge</b>:
@@ -410,6 +400,12 @@ window.dispatchEvent(new Event("fb-ready"));
    Single file. Works from a USB stick, no internet needed.
    ============================================================ */
 "use strict";
+
+/* Older iPads and Android phones do not have structuredClone.
+   Everything we clone is plain data, so a JSON round trip is identical. */
+if(typeof structuredClone!=="function"){
+  window.structuredClone=function(v){ return v===undefined?undefined:JSON.parse(JSON.stringify(v)); };
+}
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -1896,6 +1892,11 @@ function authError(e){
   };
   return t(map[c]||"g_failed");
 }
+
+/* If the browser is too old for the syntax below, this never runs and the
+   warning above stays on screen instead of a blank page. */
+try{ new Function("const f=(a)=>a?.b ?? 1; f({});"); }
+catch(e){ const w=document.getElementById("oldbrowser"); if(w) w.style.display="block"; }
 
 if("serviceWorker" in navigator)
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
